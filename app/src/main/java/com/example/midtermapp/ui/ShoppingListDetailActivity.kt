@@ -63,6 +63,7 @@ class ShoppingListDetailActivity : AppCompatActivity() {
         shoppingListViewModel.getItemsForList(listId).observe(this) { items ->
             items?.let {
                 adapter.submitList(it)
+                adapter.notifyDataSetChanged() // Notify the adapter of data changes
             }
         }
 

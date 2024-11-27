@@ -9,6 +9,7 @@ import com.example.midtermapp.data.*
 import com.google.firebase.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import android.database.sqlite.SQLiteConstraintException
 
 class ShoppingListViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -59,14 +60,19 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
     fun addShoppingListItem(item: ShoppingListItem) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                shoppingListItemDao.insert(item)
+                val existingItem = shoppingListItemDao.getItemById(item.id)
+                if (existingItem == null) {
+                    val newId = shoppingListItemDao.insert(item)
+                    item.id = newId.toInt()
+                } else {
+                    shoppingListItemDao.update(item)
+                }
                 firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).setValue(item)
             } catch (e: Exception) {
                 Log.e("ShoppingListViewModel", "Error adding shopping list item", e)
             }
         }
     }
-
     fun updateShoppingListItem(item: ShoppingListItem) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -97,8 +103,8 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
         firebaseDatabase.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 viewModelScope.launch(Dispatchers.IO) {
+                    val shoppingLists = mutableListOf<ShoppingList>()
                     try {
-                        val shoppingLists = mutableListOf<ShoppingList>()
                         for (listSnapshot in snapshot.children) {
                             val shoppingList = listSnapshot.getValue(ShoppingList::class.java)
                             if (shoppingList != null) {
@@ -107,6 +113,11 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
                         }
                         shoppingListDao.deleteAll()
                         shoppingListDao.insertAll(shoppingLists)
+                    } catch (e: SQLiteConstraintException) {
+                        Log.e("ShoppingListViewModel", "Error syncing from Firebase", e)
+                        for (shoppingList in shoppingLists) {
+                            shoppingListDao.update(shoppingList)
+                        }
                     } catch (e: Exception) {
                         Log.e("ShoppingListViewModel", "Error syncing from Firebase", e)
                     }
@@ -118,7 +129,6 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
             }
         })
     }
-
     fun checkFirebaseConnection() {
         firebaseDatabase.root.child(".info/connected").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {

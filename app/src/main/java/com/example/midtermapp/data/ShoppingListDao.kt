@@ -6,10 +6,10 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
-
+import androidx.room.OnConflictStrategy
 @Dao
 interface ShoppingListDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(shoppingList: ShoppingList): Long
 
     @Update
@@ -21,7 +21,7 @@ interface ShoppingListDao {
     @Query("SELECT * FROM shopping_lists")
     fun getAllShoppingLists(): LiveData<List<ShoppingList>>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(shoppingLists: List<ShoppingList>)
 
     @Query("DELETE FROM shopping_lists")

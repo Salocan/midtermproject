@@ -16,4 +16,7 @@ interface ShoppingListItemDao {
 
     @Query("SELECT * FROM shopping_list_items WHERE list_id = :listId")
     fun getItemsForList(listId: Int): LiveData<List<ShoppingListItem>>
+
+    @Query("SELECT * FROM shopping_list_items WHERE id = :id LIMIT 1")
+    suspend fun getItemById(id: Int): ShoppingListItem?
 }
