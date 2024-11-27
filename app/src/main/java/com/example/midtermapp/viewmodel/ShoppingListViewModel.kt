@@ -5,38 +5,29 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import com.example.midtermapp.data.ShoppingList
-import com.example.midtermapp.data.ShoppingListDao
-import com.example.midtermapp.data.ShoppingListDatabase
+import com.example.midtermapp.data.*
 import com.google.firebase.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ShoppingListViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val shoppingListDao: ShoppingListDao =
-        ShoppingListDatabase.getDatabase(application).shoppingListDao()
+    private val shoppingListDao: ShoppingListDao = ShoppingListDatabase.getDatabase(application).shoppingListDao()
+    private val shoppingListItemDao: ShoppingListItemDao = ShoppingListDatabase.getDatabase(application).shoppingListItemDao()
     val allShoppingLists: LiveData<List<ShoppingList>> = shoppingListDao.getAllShoppingLists()
 
     private val firebaseDatabase: DatabaseReference = FirebaseDatabase.getInstance().getReference("shopping_lists")
 
     init {
-        // Sync data from Firebase to Room on app start
         syncFromFirebase()
     }
 
     fun addShoppingList(shoppingList: ShoppingList) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val id = shoppingListDao.insert(shoppingList)
-                shoppingList.id = id.toInt()
-                firebaseDatabase.child(id.toString()).setValue(shoppingList)
-                    .addOnSuccessListener {
-                        Log.d("Firebase", "Data added successfully: $shoppingList")
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e("Firebase", "Failed to add data", e)
-                    }
+                val newId = shoppingListDao.insert(shoppingList)
+                shoppingList.id = newId.toInt()
+                firebaseDatabase.child(shoppingList.id.toString()).setValue(shoppingList)
             } catch (e: Exception) {
                 Log.e("ShoppingListViewModel", "Error adding shopping list", e)
             }
@@ -65,14 +56,51 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    fun addShoppingListItem(item: ShoppingListItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                shoppingListItemDao.insert(item)
+                firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).setValue(item)
+            } catch (e: Exception) {
+                Log.e("ShoppingListViewModel", "Error adding shopping list item", e)
+            }
+        }
+    }
+
+    fun updateShoppingListItem(item: ShoppingListItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                shoppingListItemDao.update(item)
+                firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).setValue(item)
+            } catch (e: Exception) {
+                Log.e("ShoppingListViewModel", "Error updating shopping list item", e)
+            }
+        }
+    }
+
+    fun deleteShoppingListItem(item: ShoppingListItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                shoppingListItemDao.delete(item)
+                firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).removeValue()
+            } catch (e: Exception) {
+                Log.e("ShoppingListViewModel", "Error deleting shopping list item", e)
+            }
+        }
+    }
+
+    fun getItemsForList(listId: Int): LiveData<List<ShoppingListItem>> {
+        return shoppingListItemDao.getItemsForList(listId)
+    }
+
     private fun syncFromFirebase() {
         firebaseDatabase.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 viewModelScope.launch(Dispatchers.IO) {
                     try {
                         val shoppingLists = mutableListOf<ShoppingList>()
-                        for (data in snapshot.children) {
-                            val shoppingList = data.getValue(ShoppingList::class.java)
+                        for (listSnapshot in snapshot.children) {
+                            val shoppingList = listSnapshot.getValue(ShoppingList::class.java)
                             if (shoppingList != null) {
                                 shoppingLists.add(shoppingList)
                             }
@@ -86,7 +114,7 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.e("ShoppingListViewModel", "Firebase sync cancelled", error.toException())
+                Log.e("ShoppingListViewModel", "Error syncing from Firebase", error.toException())
             }
         })
     }

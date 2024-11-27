@@ -5,9 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [ShoppingList::class], version = 1, exportSchema = false)
+@Database(entities = [ShoppingList::class, ShoppingListItem::class], version = 2, exportSchema = false)
 abstract class ShoppingListDatabase : RoomDatabase() {
     abstract fun shoppingListDao(): ShoppingListDao
+    abstract fun shoppingListItemDao(): ShoppingListItemDao
 
     companion object {
         @Volatile
@@ -19,7 +20,7 @@ abstract class ShoppingListDatabase : RoomDatabase() {
                     context.applicationContext,
                     ShoppingListDatabase::class.java,
                     "shopping_list_database"
-                ).build()
+                ).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance
             }

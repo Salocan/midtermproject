@@ -1,7 +1,8 @@
 <resources>
     <color name="background_color">#F5F5F5</color>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorPrimary">#2196F3</color> <!-- Blue -->
+    <color name="colorPrimaryDark">#1976D2</color> <!-- Dark Blue -->
+    <color name="colorAccent">#03A9F4</color> <!-- Light Blue -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="darker_gray">#A9A9A9</color>

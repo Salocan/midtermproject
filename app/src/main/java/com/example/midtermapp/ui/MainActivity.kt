@@ -1,5 +1,6 @@
 package com.example.midtermapp.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -13,7 +14,7 @@ import com.example.midtermapp.viewmodel.ShoppingListViewModel
 import android.app.AlertDialog
 import com.google.firebase.analytics.FirebaseAnalytics
 
-class ShoppingListActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var shoppingListViewModel: ShoppingListViewModel
     private lateinit var recyclerView: RecyclerView
@@ -33,8 +34,11 @@ class ShoppingListActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         adapter = ShoppingListAdapter(
-            onItemClick = {
-                // Handle item click
+            onItemClick = { shoppingList ->
+                val intent = Intent(this, ShoppingListDetailActivity::class.java)
+                intent.putExtra("listId", shoppingList.id)
+                intent.putExtra("listName", shoppingList.name)
+                startActivity(intent)
             },
             onDeleteClick = { shoppingListItem ->
                 deleteItem(shoppingListItem)
@@ -81,6 +85,7 @@ class ShoppingListActivity : AppCompatActivity() {
     private fun showRenameDialog(shoppingListItem: ShoppingList) {
         val dialogView = layoutInflater.inflate(R.layout.rename, null)
         val etNewName = dialogView.findViewById<EditText>(R.id.etNewName)
+        etNewName.setText(shoppingListItem.name) // Set the current name in the EditText
 
         AlertDialog.Builder(this)
             .setTitle("Rename List")
