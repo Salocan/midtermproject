@@ -19,4 +19,10 @@ interface ShoppingListItemDao {
 
     @Query("SELECT * FROM shopping_list_items WHERE id = :id LIMIT 1")
     suspend fun getItemById(id: Int): ShoppingListItem?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(items: List<ShoppingListItem>)
+
+    @Query("DELETE FROM shopping_list_items")
+    suspend fun deleteAll()
 }

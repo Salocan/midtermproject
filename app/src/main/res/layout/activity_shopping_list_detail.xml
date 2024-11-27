@@ -29,13 +29,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- TextView to show progress indicator -->
+    <TextView
+        android:id="@+id/tvProgress"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="0/0 items purchased"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/tvListName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Add Item Button -->
     <Button
         android:id="@+id/btnAddItem"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Add Item"
-        app:layout_constraintTop_toBottomOf="@id/tvListName"
+        app:layout_constraintTop_toBottomOf="@id/tvProgress"
         app:layout_constraintStart_toStartOf="parent" />
 
     <!-- RecyclerView to display shopping list items -->

@@ -19,7 +19,10 @@ data class ShoppingListItem(
     var quantity: Int,
 
     @ColumnInfo(name = "category")
-    var category: String
+    var category: String,
+
+    @ColumnInfo(name = "purchased")
+    var purchased: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

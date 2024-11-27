@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +15,7 @@ import android.app.AlertDialog
 import android.view.LayoutInflater
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.Spinner
 
 class ShoppingListDetailActivity : AppCompatActivity() {
 
@@ -25,6 +25,7 @@ class ShoppingListDetailActivity : AppCompatActivity() {
     private lateinit var btnAddItem: Button
     private lateinit var btnBack: ImageButton
     private lateinit var tvListName: TextView
+    private lateinit var tvProgress: TextView
     private var listId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,6 +38,8 @@ class ShoppingListDetailActivity : AppCompatActivity() {
         tvListName = findViewById(R.id.tvListName)
         tvListName.text = listName
 
+        tvProgress = findViewById(R.id.tvProgress)
+
         btnBack = findViewById(R.id.btnBack)
         btnBack.setOnClickListener {
             finish()
@@ -46,14 +49,21 @@ class ShoppingListDetailActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         adapter = ShoppingListItemAdapter(
-            onItemClick = { item ->
-                showItemDialog(item)
+            onItemClick = { _ ->
+                // Handle item click
             },
             onDeleteClick = { item ->
                 deleteShoppingListItem(item)
             },
             onEditClick = { item ->
                 showItemDialog(item)
+            },
+            onPurchasedChange = { item ->
+                shoppingListViewModel.updateShoppingListItem(item)
+                updateProgress()
+            },
+            onProgressUpdate = {
+                updateProgress()
             }
         )
         recyclerView.adapter = adapter
@@ -62,8 +72,9 @@ class ShoppingListDetailActivity : AppCompatActivity() {
 
         shoppingListViewModel.getItemsForList(listId).observe(this) { items ->
             items?.let {
-                adapter.submitList(it)
-                adapter.notifyDataSetChanged() // Notify the adapter of data changes
+                adapter.submitList(it) {
+                    updateProgress()
+                }
             }
         }
 
@@ -92,18 +103,18 @@ class ShoppingListDetailActivity : AppCompatActivity() {
         if (item != null) {
             etItemName.setText(item.name)
             spinnerItemCategory.setSelection(categories.indexOf(item.category))
-            tvItemQuantity.text = "x${item.quantity}"
+            tvItemQuantity.text = getString(R.string.item_quantity, item.quantity)
         }
 
         btnIncreaseQuantity.setOnClickListener {
             itemQuantity++
-            tvItemQuantity.text = "x$itemQuantity"
+            tvItemQuantity.text = getString(R.string.item_quantity, itemQuantity)
         }
 
         btnDecreaseQuantity.setOnClickListener {
             if (itemQuantity > 1) {
                 itemQuantity--
-                tvItemQuantity.text = "x$itemQuantity"
+                tvItemQuantity.text = getString(R.string.item_quantity, itemQuantity)
             }
         }
 
@@ -136,5 +147,13 @@ class ShoppingListDetailActivity : AppCompatActivity() {
 
     private fun deleteShoppingListItem(item: ShoppingListItem) {
         shoppingListViewModel.deleteShoppingListItem(item)
+        updateProgress()
+    }
+
+    private fun updateProgress() {
+        val items = adapter.currentList
+        val purchasedCount = items.count { it.purchased }
+        val totalCount = items.size
+        tvProgress.text = getString(R.string.items_purchased, purchasedCount, totalCount)
     }
 }
