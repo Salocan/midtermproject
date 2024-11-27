@@ -1,8 +1,13 @@
 package com.example.midtermapp.ui
 
 import android.os.Bundle
-import android.widget.ImageButton
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ImageButton
+import android.widget.SearchView
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -13,9 +18,7 @@ import com.example.midtermapp.data.ShoppingListItem
 import com.example.midtermapp.viewmodel.ShoppingListViewModel
 import android.app.AlertDialog
 import android.view.LayoutInflater
-import android.widget.ArrayAdapter
 import android.widget.EditText
-import android.widget.Spinner
 
 class ShoppingListDetailActivity : AppCompatActivity() {
 
@@ -26,7 +29,10 @@ class ShoppingListDetailActivity : AppCompatActivity() {
     private lateinit var btnBack: ImageButton
     private lateinit var tvListName: TextView
     private lateinit var tvProgress: TextView
+    private lateinit var searchView: SearchView
+    private lateinit var spinnerFilter: Spinner
     private var listId: Int = 0
+    private var allItems: List<ShoppingListItem> = listOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +50,9 @@ class ShoppingListDetailActivity : AppCompatActivity() {
         btnBack.setOnClickListener {
             finish()
         }
+
+        searchView = findViewById(R.id.searchView)
+        spinnerFilter = findViewById(R.id.spinnerFilter)
 
         recyclerView = findViewById(R.id.rvShoppingListItems)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -72,6 +81,7 @@ class ShoppingListDetailActivity : AppCompatActivity() {
 
         shoppingListViewModel.getItemsForList(listId).observe(this) { items ->
             items?.let {
+                allItems = it
                 adapter.submitList(it) {
                     updateProgress()
                 }
@@ -81,6 +91,55 @@ class ShoppingListDetailActivity : AppCompatActivity() {
         btnAddItem = findViewById(R.id.btnAddItem)
         btnAddItem.setOnClickListener {
             showItemDialog(null)
+        }
+
+        setupSearchView()
+        setupSpinnerFilter()
+    }
+
+    private fun setupSearchView() {
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                filterItems()
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filterItems()
+                return true
+            }
+        })
+    }
+
+    private fun setupSpinnerFilter() {
+        val categories = arrayOf("All", "Fruits", "Vegetables", "Dairy", "Meat", "Bakery", "Beverages", "Snacks", "Household", "Personal Care", "Other")
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerFilter.adapter = spinnerAdapter
+
+        spinnerFilter.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                filterItems()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // Do nothing
+            }
+        }
+    }
+
+    private fun filterItems() {
+        val query = searchView.query.toString().lowercase()
+        val selectedCategory = spinnerFilter.selectedItem.toString()
+
+        val filteredItems = allItems.filter { item ->
+            val matchesQuery = item.name.lowercase().contains(query)
+            val matchesCategory = selectedCategory == "All" || item.category == selectedCategory
+            matchesQuery && matchesCategory
+        }
+
+        adapter.submitList(filteredItems) {
+            updateProgress()
         }
     }
 
@@ -127,10 +186,10 @@ class ShoppingListDetailActivity : AppCompatActivity() {
                 if (itemName.isNotEmpty() && itemCategory.isNotEmpty()) {
                     if (item == null) {
                         val newItem = ShoppingListItem(
+                            listId = listId,
                             name = itemName,
-                            category = itemCategory,
                             quantity = itemQuantity,
-                            listId = listId
+                            category = itemCategory
                         )
                         shoppingListViewModel.addShoppingListItem(newItem)
                     } else {

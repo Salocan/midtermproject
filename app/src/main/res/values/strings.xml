@@ -2,5 +2,9 @@
     <string name="app_name">Midterm App</string>
     <string name="items_purchased">%1$d/%2$d items purchased</string>
     <string name="item_quantity">x%d</string>
-
+    <string name="back">Back</string>
+    <string name="list_name">List Name</string>
+    <string name="progress">0/0 items purchased</string>
+    <string name="search_items">Search items</string>
+    <string name="add_item">Add Item</string>
 </resources>

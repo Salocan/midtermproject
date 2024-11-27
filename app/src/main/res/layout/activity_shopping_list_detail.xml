@@ -5,23 +5,21 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <!-- ImageButton for back arrow -->
     <ImageButton
         android:id="@+id/btnBack"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:src="@drawable/ic_arrow_back"
-        android:contentDescription="Back"
+        android:contentDescription="@string/back"
         android:background="@drawable/btn_back_selector"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- TextView to show the list name centered at the top with bigger text -->
     <TextView
         android:id="@+id/tvListName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="List Name"
+        android:text="@string/list_name"
         android:textSize="24sp"
         android:textColor="@android:color/black"
         android:gravity="center"
@@ -29,12 +27,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- TextView to show progress indicator -->
     <TextView
         android:id="@+id/tvProgress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="0/0 items purchased"
+        android:text="@string/progress"
         android:textSize="16sp"
         android:textColor="@android:color/black"
         android:gravity="center"
@@ -42,16 +39,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Add Item Button -->
+    <SearchView
+        android:id="@+id/searchView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:queryHint="@string/search_items"
+        app:layout_constraintTop_toBottomOf="@id/tvProgress"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/spinnerFilter"
+        android:layout_marginEnd="8dp" />
+
+    <Spinner
+        android:id="@+id/spinnerFilter"
+        android:layout_width="130dp"
+        android:layout_height="51dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvProgress" />
+
     <Button
         android:id="@+id/btnAddItem"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add Item"
-        app:layout_constraintTop_toBottomOf="@id/tvProgress"
+        android:text="@string/add_item"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/colorPrimary"
+        app:layout_constraintTop_toBottomOf="@id/searchView"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- RecyclerView to display shopping list items -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvShoppingListItems"
         android:layout_width="0dp"
