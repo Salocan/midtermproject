@@ -1,3 +1,4 @@
+// ShoppingList.kt
 package com.example.midtermapp.data
 
 import androidx.room.ColumnInfo
@@ -10,9 +11,12 @@ data class ShoppingList(
     var id: Int = 0,
 
     @ColumnInfo(name = "name")
-    var name: String
+    var name: String,
+
+    @ColumnInfo(name = "is_preset")
+    var isPreset: Boolean = false
 ) {
-    constructor() : this(0, "")
+    constructor() : this(0, "", false)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -20,6 +24,7 @@ data class ShoppingList(
 
         if (id != other.id) return false
         if (name != other.name) return false
+        if (isPreset != other.isPreset) return false
 
         return true
     }
@@ -27,6 +32,7 @@ data class ShoppingList(
     override fun hashCode(): Int {
         var result = id
         result = 31 * result + name.hashCode()
+        result = 31 * result + isPreset.hashCode()
         return result
     }
 }

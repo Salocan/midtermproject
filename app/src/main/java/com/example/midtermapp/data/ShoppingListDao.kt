@@ -1,15 +1,12 @@
+// ShoppingListDao.kt
 package com.example.midtermapp.data
 
 import androidx.lifecycle.LiveData
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
-import androidx.room.OnConflictStrategy
+import androidx.room.*
+
 @Dao
 interface ShoppingListDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insert(shoppingList: ShoppingList): Long
 
     @Update
@@ -18,15 +15,9 @@ interface ShoppingListDao {
     @Delete
     suspend fun delete(shoppingList: ShoppingList): Int
 
-    @Query("SELECT * FROM shopping_lists")
+    @Query("SELECT * FROM shopping_lists WHERE is_preset = 1")
+    fun getAllPresets(): LiveData<List<ShoppingList>>
+
+    @Query("SELECT * FROM shopping_lists WHERE is_preset = 0")
     fun getAllShoppingLists(): LiveData<List<ShoppingList>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(shoppingLists: List<ShoppingList>)
-
-    @Query("DELETE FROM shopping_lists")
-    suspend fun deleteAll()
-
-    @Query("DELETE FROM sqlite_sequence WHERE name = 'shopping_lists'")
-    suspend fun resetAutoIncrement()
 }

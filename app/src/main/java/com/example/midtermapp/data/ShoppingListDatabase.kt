@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [ShoppingList::class, ShoppingListItem::class], version = 3, exportSchema = false)
+@Database(entities = [ShoppingList::class, ShoppingListItem::class], version = 4, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class ShoppingListDatabase : RoomDatabase() {
     abstract fun shoppingListDao(): ShoppingListDao
@@ -22,7 +22,9 @@ abstract class ShoppingListDatabase : RoomDatabase() {
                     context.applicationContext,
                     ShoppingListDatabase::class.java,
                     "shopping_list_database"
-                ).fallbackToDestructiveMigration().build()
+                )
+                    .fallbackToDestructiveMigration() // Use this if you don't have a migration strategy
+                    .build()
                 INSTANCE = instance
                 instance
             }

@@ -25,4 +25,6 @@ interface ShoppingListItemDao {
 
     @Query("DELETE FROM shopping_list_items")
     suspend fun deleteAll()
+    @Query("SELECT * FROM shopping_list_items WHERE list_id = :listId")
+    suspend fun getItemsForListSync(listId: Int): List<ShoppingListItem>
 }

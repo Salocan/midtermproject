@@ -1,3 +1,4 @@
+// MainActivity.kt
 package com.example.midtermapp.ui
 
 import android.content.Intent
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ShoppingListAdapter
     private lateinit var etListName: EditText
     private lateinit var btnAdd: Button
+    private lateinit var btnPresets: Button
     private lateinit var firebaseAnalytics: FirebaseAnalytics
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,12 +42,8 @@ class MainActivity : AppCompatActivity() {
                 intent.putExtra("listName", shoppingList.name)
                 startActivity(intent)
             },
-            onDeleteClick = { shoppingListItem ->
-                deleteItem(shoppingListItem)
-            },
-            onEditClick = { shoppingListItem ->
-                showRenameDialog(shoppingListItem)
-            }
+            onDeleteClick = { shoppingListItem -> deleteItem(shoppingListItem) },
+            onEditClick = { shoppingListItem -> showRenameDialog(shoppingListItem) }
         )
         recyclerView.adapter = adapter
 
@@ -59,6 +57,7 @@ class MainActivity : AppCompatActivity() {
 
         etListName = findViewById(R.id.etListName)
         btnAdd = findViewById(R.id.btnAdd)
+        btnPresets = findViewById(R.id.btnPresets)
 
         btnAdd.setOnClickListener {
             val listName = etListName.text.toString()
@@ -74,6 +73,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        btnPresets.setOnClickListener {
+            val intent = Intent(this, PresetsActivity::class.java)
+            startActivity(intent)
+        }
+
         // Check Firebase connection
         shoppingListViewModel.checkFirebaseConnection()
     }
@@ -85,7 +89,7 @@ class MainActivity : AppCompatActivity() {
     private fun showRenameDialog(shoppingListItem: ShoppingList) {
         val dialogView = layoutInflater.inflate(R.layout.rename, null)
         val etNewName = dialogView.findViewById<EditText>(R.id.etNewName)
-        etNewName.setText(shoppingListItem.name) // Set the current name in the EditText
+        etNewName.setText(shoppingListItem.name)
 
         AlertDialog.Builder(this)
             .setTitle("Rename List")

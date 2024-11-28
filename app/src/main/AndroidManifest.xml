@@ -26,6 +26,9 @@
         <activity
             android:name=".ui.ShoppingListDetailActivity"
             android:exported="true" />
+        <activity
+            android:name=".ui.PresetsActivity"
+            android:exported="true" />
     </application>
 
 </manifest>

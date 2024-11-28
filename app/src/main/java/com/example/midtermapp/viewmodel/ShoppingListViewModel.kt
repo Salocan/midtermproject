@@ -2,100 +2,49 @@
 package com.example.midtermapp.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.midtermapp.data.*
-import com.google.firebase.database.*
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class ShoppingListViewModel(application: Application) : AndroidViewModel(application) {
-
     private val shoppingListDao: ShoppingListDao = ShoppingListDatabase.getDatabase(application).shoppingListDao()
     private val shoppingListItemDao: ShoppingListItemDao = ShoppingListDatabase.getDatabase(application).shoppingListItemDao()
+    private val firebaseDatabase = FirebaseDatabase.getInstance().reference
+
     val allShoppingLists: LiveData<List<ShoppingList>> = shoppingListDao.getAllShoppingLists()
-
-    private val firebaseDatabase: DatabaseReference = FirebaseDatabase.getInstance().getReference("shopping_lists")
-
-    private val _itemsForList = MutableLiveData<List<ShoppingListItem>>()
-    val itemsForList: LiveData<List<ShoppingListItem>> get() = _itemsForList
-
-    init {
-        syncFromFirebase()
-    }
+    val allPresets: LiveData<List<ShoppingList>> = shoppingListDao.getAllPresets()
 
     fun addShoppingList(shoppingList: ShoppingList) {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val id = shoppingListDao.insert(shoppingList)
-                shoppingList.id = id.toInt()
-                firebaseDatabase.child(shoppingList.id.toString()).setValue(shoppingList)
-            } catch (e: Exception) {
-                Log.e("ShoppingListViewModel", "Error adding shopping list", e)
-            }
-        }
-    }
-
-    fun updateShoppingList(shoppingList: ShoppingList) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                shoppingListDao.update(shoppingList)
-                firebaseDatabase.child(shoppingList.id.toString()).setValue(shoppingList)
-            } catch (e: Exception) {
-                Log.e("ShoppingListViewModel", "Error updating shopping list", e)
-            }
-        }
-    }
-
-    fun deleteShoppingList(shoppingList: ShoppingList) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                shoppingListDao.delete(shoppingList)
-                firebaseDatabase.child(shoppingList.id.toString()).removeValue()
-            } catch (e: Exception) {
-                Log.e("ShoppingListViewModel", "Error deleting shopping list", e)
-            }
+            val listId = shoppingListDao.insert(shoppingList)
+            shoppingList.id = listId.toInt()
+            firebaseDatabase.child("shopping_lists").child(shoppingList.id.toString()).setValue(shoppingList)
         }
     }
 
     fun addShoppingListItem(item: ShoppingListItem) {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val id = shoppingListItemDao.insert(item)
-                item.id = id.toInt()
-                firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).setValue(item)
-                updateItemsForList(item.listId)
-            } catch (e: Exception) {
-                Log.e("ShoppingListViewModel", "Error adding shopping list item", e)
-            }
+            val itemId = shoppingListItemDao.insert(item)
+            item.id = itemId.toInt()
+            firebaseDatabase.child("shopping_list_items").child(item.id.toString()).setValue(item)
         }
     }
 
     fun updateShoppingListItem(item: ShoppingListItem) {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                shoppingListItemDao.update(item)
-                firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).setValue(item)
-                updateItemsForList(item.listId)
-            } catch (e: Exception) {
-                Log.e("ShoppingListViewModel", "Error updating shopping list item", e)
-            }
+            shoppingListItemDao.update(item)
+            firebaseDatabase.child("shopping_list_items").child(item.id.toString()).setValue(item)
         }
     }
 
     fun deleteShoppingListItem(item: ShoppingListItem) {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                shoppingListItemDao.delete(item)
-                firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).removeValue()
-                updateItemsForList(item.listId)
-            } catch (e: Exception) {
-                Log.e("ShoppingListViewModel", "Error deleting shopping list item", e)
-            }
+            shoppingListItemDao.delete(item)
+            firebaseDatabase.child("shopping_list_items").child(item.id.toString()).removeValue()
         }
     }
 
@@ -103,66 +52,68 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
         return shoppingListItemDao.getItemsForList(listId)
     }
 
-    private fun updateItemsForList(listId: Int) {
+    fun addPreset(preset: ShoppingList) {
         viewModelScope.launch(Dispatchers.IO) {
-            val items = shoppingListItemDao.getItemsForList(listId).value
-            withContext(Dispatchers.Main) {
-                _itemsForList.value = items
+            val presetId = shoppingListDao.insert(preset.copy(isPreset = true)) // Explicitly set isPreset
+            preset.id = presetId.toInt()
+            firebaseDatabase.child("presets").child(preset.id.toString()).setValue(preset)
+        }
+    }
+
+    fun importPreset(preset: ShoppingList) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Copy the preset to a new shopping list
+            val newList = preset.copy(id = 0, isPreset = false)
+            val newListId = shoppingListDao.insert(newList)
+            newList.id = newListId.toInt()
+            firebaseDatabase.child("shopping_lists").child(newList.id.toString()).setValue(newList)
+
+            // Fetch items associated with the preset
+            val presetItems = shoppingListItemDao.getItemsForListSync(preset.id)
+
+            // Copy items to the new shopping list
+            val newItems = presetItems.map { it.copy(id = 0, listId = newList.id) }
+            shoppingListItemDao.insertAll(newItems)
+            newItems.forEach { item ->
+                firebaseDatabase.child("shopping_list_items").child(item.id.toString()).setValue(item)
             }
         }
     }
 
-    fun syncFromFirebase() {
-        firebaseDatabase.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                viewModelScope.launch(Dispatchers.IO) {
-                    val shoppingLists = mutableListOf<ShoppingList>()
-                    val shoppingListItems = mutableListOf<ShoppingListItem>()
-
-                    try {
-                        for (listSnapshot in snapshot.children) {
-                            val shoppingList = listSnapshot.getValue(ShoppingList::class.java)
-                            shoppingList?.let { shoppingLists.add(it) }
-
-                            val itemsSnapshot = listSnapshot.child("items")
-                            for (itemSnapshot in itemsSnapshot.children) {
-                                val shoppingListItem = itemSnapshot.getValue(ShoppingListItem::class.java)
-                                shoppingListItem?.let { shoppingListItems.add(it) }
-                            }
-                        }
-
-                        shoppingListDao.insertAll(shoppingLists)
-                        shoppingListItemDao.insertAll(shoppingListItems)
-                    } catch (e: Exception) {
-                        Log.e("ShoppingListViewModel", "Error syncing from Firebase", e)
-                    }
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("ShoppingListViewModel", "Error syncing from Firebase", error.toException())
-            }
-        })
-    }
-
+    // Add the missing methods
     fun checkFirebaseConnection() {
-        firebaseDatabase.root.child(".info/connected").addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val connected = snapshot.getValue(Boolean::class.java) ?: false
-                if (connected) {
-                    Log.d("Firebase", "Connected to Firebase")
-                } else {
-                    Log.d("Firebase", "Disconnected from Firebase")
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("Firebase", "Error checking connection", error.toException())
-            }
-        })
+        // Implement the logic to check Firebase connection
     }
 
-    private fun updateProgress() {
-        // Implement the logic to update the progress in the UI
+    fun deleteShoppingList(shoppingList: ShoppingList) {
+        viewModelScope.launch(Dispatchers.IO) {
+            shoppingListDao.delete(shoppingList)
+            firebaseDatabase.child("shopping_lists").child(shoppingList.id.toString()).removeValue()
+        }
+    }
+
+    fun updateShoppingList(shoppingList: ShoppingList) {
+        viewModelScope.launch(Dispatchers.IO) {
+            shoppingListDao.update(shoppingList)
+            firebaseDatabase.child("shopping_lists").child(shoppingList.id.toString()).setValue(shoppingList)
+        }
+    }
+
+    fun deletePreset(preset: ShoppingList) {
+        viewModelScope.launch(Dispatchers.IO) {
+            shoppingListDao.delete(preset)
+            firebaseDatabase.child("presets").child(preset.id.toString()).removeValue()
+        }
+    }
+
+    fun updatePreset(preset: ShoppingList) {
+        viewModelScope.launch(Dispatchers.IO) {
+            shoppingListDao.update(preset)
+            firebaseDatabase.child("presets").child(preset.id.toString()).setValue(preset)
+        }
+    }
+
+    fun syncFromFirebase() {
+        // Implement the logic to sync data from Firebase
     }
 }
