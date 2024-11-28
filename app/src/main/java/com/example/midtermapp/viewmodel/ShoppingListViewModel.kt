@@ -1,9 +1,11 @@
+// ShoppingListViewModel.kt
 package com.example.midtermapp.viewmodel
 
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.midtermapp.data.*
 import com.google.firebase.database.*
@@ -18,6 +20,9 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
     val allShoppingLists: LiveData<List<ShoppingList>> = shoppingListDao.getAllShoppingLists()
 
     private val firebaseDatabase: DatabaseReference = FirebaseDatabase.getInstance().getReference("shopping_lists")
+
+    private val _itemsForList = MutableLiveData<List<ShoppingListItem>>()
+    val itemsForList: LiveData<List<ShoppingListItem>> get() = _itemsForList
 
     init {
         syncFromFirebase()
@@ -63,6 +68,7 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
                 val id = shoppingListItemDao.insert(item)
                 item.id = id.toInt()
                 firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).setValue(item)
+                updateItemsForList(item.listId)
             } catch (e: Exception) {
                 Log.e("ShoppingListViewModel", "Error adding shopping list item", e)
             }
@@ -74,6 +80,7 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
             try {
                 shoppingListItemDao.update(item)
                 firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).setValue(item)
+                updateItemsForList(item.listId)
             } catch (e: Exception) {
                 Log.e("ShoppingListViewModel", "Error updating shopping list item", e)
             }
@@ -85,6 +92,7 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
             try {
                 shoppingListItemDao.delete(item)
                 firebaseDatabase.child(item.listId.toString()).child("items").child(item.id.toString()).removeValue()
+                updateItemsForList(item.listId)
             } catch (e: Exception) {
                 Log.e("ShoppingListViewModel", "Error deleting shopping list item", e)
             }
@@ -95,7 +103,16 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
         return shoppingListItemDao.getItemsForList(listId)
     }
 
-    private fun syncFromFirebase() {
+    private fun updateItemsForList(listId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val items = shoppingListItemDao.getItemsForList(listId).value
+            withContext(Dispatchers.Main) {
+                _itemsForList.value = items
+            }
+        }
+    }
+
+    fun syncFromFirebase() {
         firebaseDatabase.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 viewModelScope.launch(Dispatchers.IO) {
@@ -103,7 +120,6 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
                     val shoppingListItems = mutableListOf<ShoppingListItem>()
 
                     try {
-                        // Parse data from Firebase
                         for (listSnapshot in snapshot.children) {
                             val shoppingList = listSnapshot.getValue(ShoppingList::class.java)
                             shoppingList?.let { shoppingLists.add(it) }
@@ -115,15 +131,8 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
                             }
                         }
 
-                        // Update local database
                         shoppingListDao.insertAll(shoppingLists)
                         shoppingListItemDao.insertAll(shoppingListItems)
-
-                        // Notify UI of the change
-                        withContext(Dispatchers.Main) {
-                            updateProgress()
-                        }
-
                     } catch (e: Exception) {
                         Log.e("ShoppingListViewModel", "Error syncing from Firebase", e)
                     }

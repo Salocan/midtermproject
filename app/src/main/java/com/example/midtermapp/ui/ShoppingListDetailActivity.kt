@@ -1,3 +1,4 @@
+// ShoppingListDetailActivity.kt
 package com.example.midtermapp.ui
 
 import android.os.Bundle
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.midtermapp.R
 import com.example.midtermapp.data.ShoppingListItem
 import com.example.midtermapp.viewmodel.ShoppingListViewModel
@@ -31,6 +33,7 @@ class ShoppingListDetailActivity : AppCompatActivity() {
     private lateinit var tvProgress: TextView
     private lateinit var searchView: SearchView
     private lateinit var spinnerFilter: Spinner
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private var listId: Int = 0
     private var allItems: List<ShoppingListItem> = listOf()
 
@@ -58,33 +61,32 @@ class ShoppingListDetailActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         adapter = ShoppingListItemAdapter(
-            onItemClick = { _ ->
-                // Handle item click
-            },
-            onDeleteClick = { item ->
-                deleteShoppingListItem(item)
-            },
-            onEditClick = { item ->
-                showItemDialog(item)
-            },
-            onPurchasedChange = { item ->
-                shoppingListViewModel.updateShoppingListItem(item)
-                updateProgress()
-            },
-            onProgressUpdate = {
-                updateProgress()
-            }
+            onItemClick = { _ -> },
+            onDeleteClick = { item -> deleteShoppingListItem(item) },
+            onEditClick = { item -> showItemDialog(item) },
+            onPurchasedChange = { item -> shoppingListViewModel.updateShoppingListItem(item) },
+            onProgressUpdate = { updateProgress() }
         )
         recyclerView.adapter = adapter
+
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
+        swipeRefreshLayout.setOnRefreshListener {
+            shoppingListViewModel.syncFromFirebase()
+            shoppingListViewModel.getItemsForList(listId).observe(this) { items ->
+                items?.let {
+                    allItems = it
+                    filterItems()
+                    swipeRefreshLayout.isRefreshing = false
+                }
+            }
+        }
 
         shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
 
         shoppingListViewModel.getItemsForList(listId).observe(this) { items ->
             items?.let {
                 allItems = it
-                adapter.submitList(it) {
-                    updateProgress()
-                }
+                filterItems()
             }
         }
 
@@ -122,9 +124,7 @@ class ShoppingListDetailActivity : AppCompatActivity() {
                 filterItems()
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                // Do nothing
-            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
@@ -183,20 +183,21 @@ class ShoppingListDetailActivity : AppCompatActivity() {
             .setPositiveButton(if (item == null) "Add" else "Save") { _, _ ->
                 val itemName = etItemName.text.toString()
                 val itemCategory = spinnerItemCategory.selectedItem.toString()
-                if (itemName.isNotEmpty() && itemCategory.isNotEmpty()) {
+                if (itemName.isNotEmpty()) {
+                    val newItem = item?.copy(
+                        name = itemName,
+                        category = itemCategory,
+                        quantity = itemQuantity
+                    ) ?: ShoppingListItem(
+                        listId = listId,
+                        name = itemName,
+                        category = itemCategory,
+                        quantity = itemQuantity
+                    )
                     if (item == null) {
-                        val newItem = ShoppingListItem(
-                            listId = listId,
-                            name = itemName,
-                            quantity = itemQuantity,
-                            category = itemCategory
-                        )
                         shoppingListViewModel.addShoppingListItem(newItem)
                     } else {
-                        item.name = itemName
-                        item.category = itemCategory
-                        item.quantity = itemQuantity
-                        shoppingListViewModel.updateShoppingListItem(item)
+                        shoppingListViewModel.updateShoppingListItem(newItem)
                     }
                 }
             }
