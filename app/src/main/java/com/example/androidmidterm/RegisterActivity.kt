@@ -22,15 +22,24 @@ class RegisterActivity : AppCompatActivity() {
         registerButton.setOnClickListener {
             val email = emailEditText.text.toString()
             val password = passwordEditText.text.toString()
-            authViewModel.register(email, password) { user ->
-                if (user != null) {
-                    Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()
-                    // Navigate to login activity
-                    finish()
-                } else {
-                    Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show()
+
+            if (isValidEmail(email)) {
+                authViewModel.register(email, password) { user ->
+                    if (user != null) {
+                        Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()
+                        // Navigate to login activity
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show()
+                    }
                 }
+            } else {
+                Toast.makeText(this, "Invalid email address", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 }
