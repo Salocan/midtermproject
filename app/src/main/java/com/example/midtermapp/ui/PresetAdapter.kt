@@ -1,4 +1,4 @@
-// PresetAdapter.kt
+
 package com.example.midtermapp.ui
 
 import android.view.LayoutInflater

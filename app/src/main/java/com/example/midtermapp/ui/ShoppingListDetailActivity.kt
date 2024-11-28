@@ -1,4 +1,3 @@
-// ShoppingListDetailActivity.kt
 package com.example.midtermapp.ui
 
 import android.os.Bundle

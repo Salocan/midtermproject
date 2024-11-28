@@ -6,7 +6,6 @@
     android:padding="16dp"
     android:background="@color/background_color">
 
-    <!-- EditText to enter list name -->
     <EditText
         android:id="@+id/etListName"
         android:layout_width="0dp"
@@ -14,12 +13,12 @@
         android:hint="@string/list_name"
         android:background="@drawable/edit_text_background"
         android:padding="12dp"
+        android:textColor="@android:color/black"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btnAdd"
         android:layout_marginEnd="8dp"/>
 
-    <!-- Add Button -->
     <Button
         android:id="@+id/btnAdd"
         android:layout_width="wrap_content"
@@ -32,7 +31,6 @@
         app:layout_constraintEnd_toStartOf="@id/btnPresets"
         android:layout_marginEnd="16dp"/>
 
-    <!-- Presets Button -->
     <Button
         android:id="@+id/btnPresets"
         android:layout_width="wrap_content"
@@ -45,7 +43,6 @@
         app:layout_constraintStart_toEndOf="@id/btnAdd"
         android:layout_marginStart="-10dp"/>
 
-    <!-- RecyclerView to display shopping lists -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvShoppingLists"
         android:layout_width="0dp"

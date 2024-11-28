@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <!-- RecyclerView to display presets -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvPresets"
         android:layout_width="0dp"
@@ -15,7 +14,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/btnAddPreset" />
 
-    <!-- Add Preset Button -->
     <Button
         android:id="@+id/btnAddPreset"
         android:layout_width="wrap_content"

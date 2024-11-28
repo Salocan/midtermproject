@@ -1,4 +1,4 @@
-// ShoppingListDao.kt
+
 package com.example.midtermapp.data
 
 import androidx.lifecycle.LiveData

@@ -1,4 +1,4 @@
-// PresetsActivity.kt
+
 package com.example.midtermapp.ui
 
 import android.content.Intent
@@ -27,6 +27,7 @@ class PresetsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_presets)
 
         shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
+        shoppingListViewModel.listenForDeletions()
 
         recyclerView = findViewById(R.id.rvPresets)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -87,7 +88,7 @@ class PresetsActivity : AppCompatActivity() {
                     preset.name = newName
                     shoppingListViewModel.updatePreset(preset)
 
-                    // Restart PresetsActivity
+
                     val intent = Intent(this, PresetsActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(intent)

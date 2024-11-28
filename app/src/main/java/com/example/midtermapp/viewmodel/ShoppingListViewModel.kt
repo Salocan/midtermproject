@@ -1,4 +1,3 @@
-// ShoppingListViewModel.kt
 package com.example.midtermapp.viewmodel
 
 import android.app.Application
@@ -6,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.example.midtermapp.data.*
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -54,7 +53,7 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
 
     fun addPreset(preset: ShoppingList) {
         viewModelScope.launch(Dispatchers.IO) {
-            val presetId = shoppingListDao.insert(preset.copy(isPreset = true)) // Explicitly set isPreset
+            val presetId = shoppingListDao.insert(preset.copy(isPreset = true))
             preset.id = presetId.toInt()
             firebaseDatabase.child("presets").child(preset.id.toString()).setValue(preset)
         }
@@ -62,16 +61,13 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
 
     fun importPreset(preset: ShoppingList) {
         viewModelScope.launch(Dispatchers.IO) {
-            // Copy the preset to a new shopping list
             val newList = preset.copy(id = 0, isPreset = false)
             val newListId = shoppingListDao.insert(newList)
             newList.id = newListId.toInt()
             firebaseDatabase.child("shopping_lists").child(newList.id.toString()).setValue(newList)
 
-            // Fetch items associated with the preset
             val presetItems = shoppingListItemDao.getItemsForListSync(preset.id)
 
-            // Copy items to the new shopping list
             val newItems = presetItems.map { it.copy(id = 0, listId = newList.id) }
             shoppingListItemDao.insertAll(newItems)
             newItems.forEach { item ->
@@ -80,9 +76,7 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
-    // Add the missing methods
     fun checkFirebaseConnection() {
-        // Implement the logic to check Firebase connection
     }
 
     fun deleteShoppingList(shoppingList: ShoppingList) {
@@ -114,6 +108,56 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun syncFromFirebase() {
-        // Implement the logic to sync data from Firebase
+    }
+
+
+    fun listenForDeletions() {
+        firebaseDatabase.child("shopping_lists").addChildEventListener(object : ChildEventListener {
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                val shoppingList = snapshot.getValue(ShoppingList::class.java)
+                shoppingList?.let {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        shoppingListDao.delete(it)
+                    }
+                }
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onCancelled(error: DatabaseError) {}
+        })
+
+        firebaseDatabase.child("shopping_list_items").addChildEventListener(object : ChildEventListener {
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                val shoppingListItem = snapshot.getValue(ShoppingListItem::class.java)
+                shoppingListItem?.let {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        shoppingListItemDao.delete(it)
+                    }
+                }
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onCancelled(error: DatabaseError) {}
+        })
+
+        firebaseDatabase.child("presets").addChildEventListener(object : ChildEventListener {
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                val preset = snapshot.getValue(ShoppingList::class.java)
+                preset?.let {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        shoppingListDao.delete(it)
+                    }
+                }
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onCancelled(error: DatabaseError) {}
+        })
     }
 }

@@ -23,7 +23,7 @@ abstract class ShoppingListDatabase : RoomDatabase() {
                     ShoppingListDatabase::class.java,
                     "shopping_list_database"
                 )
-                    .fallbackToDestructiveMigration() // Use this if you don't have a migration strategy
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

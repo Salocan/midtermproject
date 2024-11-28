@@ -1,4 +1,4 @@
-// ShoppingList.kt
+
 package com.example.midtermapp.data
 
 import androidx.room.ColumnInfo

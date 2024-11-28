@@ -1,4 +1,4 @@
-// MainActivity.kt
+
 package com.example.midtermapp.ui
 
 import android.content.Intent
@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize Firebase Analytics
         firebaseAnalytics = FirebaseAnalytics.getInstance(this)
 
         recyclerView = findViewById(R.id.rvShoppingLists)
@@ -48,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
+        shoppingListViewModel.listenForDeletions()
 
         shoppingListViewModel.allShoppingLists.observe(this) { shoppingLists ->
             shoppingLists?.let {
@@ -66,7 +66,6 @@ class MainActivity : AppCompatActivity() {
                 shoppingListViewModel.addShoppingList(shoppingList)
                 etListName.text.clear()
 
-                // Log an event to Firebase Analytics
                 val bundle = Bundle()
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, listName)
                 firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
@@ -100,7 +99,7 @@ class MainActivity : AppCompatActivity() {
                     shoppingListItem.name = newName
                     shoppingListViewModel.updateShoppingList(shoppingListItem)
 
-                    // Restart MainActivity
+
                     val intent = Intent(this, MainActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(intent)
