@@ -100,10 +100,11 @@ class MainActivity : AppCompatActivity() {
                     shoppingListItem.name = newName
                     shoppingListViewModel.updateShoppingList(shoppingListItem)
 
-                    // Log an event to Firebase Analytics
-                    val bundle = Bundle()
-                    bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, newName)
-                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                    // Restart MainActivity
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    finish()
                 }
             }
             .setNegativeButton("Cancel", null)

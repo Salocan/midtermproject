@@ -86,6 +86,12 @@ class PresetsActivity : AppCompatActivity() {
                 if (newName.isNotEmpty()) {
                     preset.name = newName
                     shoppingListViewModel.updatePreset(preset)
+
+                    // Restart PresetsActivity
+                    val intent = Intent(this, PresetsActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    finish()
                 }
             }
             .setNegativeButton("Cancel", null)
