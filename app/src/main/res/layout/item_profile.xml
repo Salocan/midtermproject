@@ -1,0 +1,40 @@
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:id="@+id/fullNameEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:autofillHints="name"
+            android:hint="@string/full_name_hint"
+            android:inputType="textPersonName"
+            android:minHeight="48dp"
+            android:textColorHint="#546E7A"
+            app:layout_constraintBottom_toTopOf="@id/dateOfBirthEditText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="VisualLintTextFieldSize" />
+
+        <EditText
+            android:id="@+id/dateOfBirthEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:autofillHints="birthDateFull"
+            android:hint="@string/date_of_birth_hint"
+            android:inputType="text"
+            android:minHeight="48dp"
+            android:textColorHint="#546E7A"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/fullNameEditText"
+            tools:ignore="TextFields,VisualLintTextFieldSize" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
