@@ -27,7 +27,10 @@ class AuthViewModel : ViewModel() {
         return authRepository.getCurrentUser()
     }
 
-    fun logout() {
-        authRepository.logout()
+    fun logout(onResult: () -> Unit) {
+        viewModelScope.launch {
+            authRepository.logout()
+            onResult()
+        }
     }
 }

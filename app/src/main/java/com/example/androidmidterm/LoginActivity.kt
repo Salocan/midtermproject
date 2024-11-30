@@ -1,5 +1,6 @@
 package com.example.androidmidterm
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -14,6 +15,18 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Check login state
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false)
+        if (isLoggedIn) {
+            // Redirect to main activity if already logged in
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_login)
 
         val emailEditText: EditText = findViewById(R.id.emailEditText)
@@ -27,6 +40,8 @@ class LoginActivity : AppCompatActivity() {
             authViewModel.login(email, password) { user ->
                 if (user != null) {
                     Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+                    // Save login state
+                    sharedPreferences.edit().putBoolean("is_logged_in", true).apply()
                     // Navigate to main activity
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
