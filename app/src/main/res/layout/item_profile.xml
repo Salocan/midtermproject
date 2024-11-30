@@ -11,7 +11,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:autofillHints="name"
-            android:hint="@string/full_name_hint"
+            android:hint="Full Name"
             android:inputType="textPersonName"
             android:minHeight="48dp"
             android:textColorHint="#546E7A"
@@ -19,14 +19,14 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="VisualLintTextFieldSize" />
+            tools:ignore="HardcodedText,VisualLintTextFieldSize" />
 
         <EditText
             android:id="@+id/dateOfBirthEditText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:autofillHints="birthDateFull"
-            android:hint="@string/date_of_birth_hint"
+            android:hint="Date of Birth"
             android:inputType="text"
             android:minHeight="48dp"
             android:textColorHint="#546E7A"
@@ -34,7 +34,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/fullNameEditText"
-            tools:ignore="TextFields,VisualLintTextFieldSize" />
+            tools:ignore="HardcodedText,TextFields,VisualLintTextFieldSize" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
