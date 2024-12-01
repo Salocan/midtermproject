@@ -9,10 +9,10 @@ import kotlinx.coroutines.launch
 class AuthViewModel : ViewModel() {
     private val authRepository = AuthRepository()
 
-    fun register(email: String, password: String, onResult: (FirebaseUser?) -> Unit) {
+    fun register(email: String, password: String, onResult: (Result<FirebaseUser?>) -> Unit) {
         viewModelScope.launch {
-            val user = authRepository.register(email, password)
-            onResult(user)
+            val result = authRepository.register(email, password)
+            onResult(result)
         }
     }
 
