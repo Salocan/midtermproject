@@ -29,10 +29,5 @@ data class ShoppingList(
         return true
     }
 
-    override fun hashCode(): Int {
-        var result = id
-        result = 31 * result + name.hashCode()
-        result = 31 * result + isPreset.hashCode()
-        return result
-    }
+
 }
