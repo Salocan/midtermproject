@@ -1,5 +1,6 @@
 package com.example.androidmidterm
 
+
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -25,6 +26,7 @@ class ProfileAdapter : RecyclerView.Adapter<ProfileAdapter.ProfileViewHolder>() 
     fun getFullName(): String = fullName
 
     fun getDateOfBirth(): String = dateOfBirth
+
 
     fun updateProfile(fullName: String, dateOfBirth: String) {
         this.fullName = fullName
